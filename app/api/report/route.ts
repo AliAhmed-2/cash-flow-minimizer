@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const GROUP_ID = "demo-group";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const settlement = await prisma.settlement.findFirst({
     where: { groupId: GROUP_ID },
     orderBy: { createdAt: "desc" },
   });
+
+console.log("Settlement found:", settlement);
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
+console.log("GROUP_ID:", GROUP_ID);
 
   if (!settlement) {
     return NextResponse.json({ error: "No settlement has been run yet." }, { status: 404 });
