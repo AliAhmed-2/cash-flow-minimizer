@@ -76,7 +76,7 @@ export default function Home() {
 
   async function runOptimizer() {
     setLoading(true);
-    const res = await fetch(fetch(`/api/settle?groupId=${groupId}`));
+    const res = await fetch(`/api/settle?groupId=${groupId}`);
     const data = await res.json();
     setTransactions(data.transactions);
     setLoading(false);
