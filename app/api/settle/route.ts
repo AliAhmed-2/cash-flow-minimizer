@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { computeBalances, minimizeCashFlow } from "@/lib/minimizeCashFlow";
 
-const GROUP_ID = "demo-group";
+
 export const dynamic = "force-dynamic";
-export async function GET() {
-  const participants = await prisma.participant.findMany({ where: { groupId: GROUP_ID } });
-  const debts = await prisma.debt.findMany({ where: { groupId: GROUP_ID } });
+export async function GET(req: NextRequest) {
+    const groupId =
+    req.nextUrl.searchParams.get("groupId") ?? "demo-group";
+  const participants = await prisma.participant.findMany({ where: { groupId} });
+  const debts = await prisma.debt.findMany({ where: { groupId} });
 
   const balances = computeBalances(
     participants.map((p) => p.id),
@@ -15,10 +17,10 @@ export async function GET() {
   const transactions = minimizeCashFlow(balances);
 
   const settlement = await prisma.settlement.create({
-    data: { groupId: GROUP_ID, result: JSON.stringify(transactions) },
+    data: { groupId, result: JSON.stringify(transactions) },
   });
   console.log("DATABASE_URL:", process.env.DATABASE_URL);
-console.log("GROUP_ID:", GROUP_ID);
+console.log("GROUP_ID:", groupId);
 
   return NextResponse.json({
     settlementId: settlement.id,

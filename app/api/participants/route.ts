@@ -2,17 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // No auth/login in this build, so every request shares one demo group.
-const GROUP_ID = "demo-group";
 
-export async function GET() {
+
+export async function GET(req: NextRequest) {
+    const groupId =
+    req.nextUrl.searchParams.get("groupId") ?? "demo-group";
   const participants = await prisma.participant.findMany({
-    where: { groupId: GROUP_ID },
+    where: { groupId},
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json(participants);
 }
 
 export async function POST(req: NextRequest) {
+    const groupId =
+    req.nextUrl.searchParams.get("groupId") ?? "demo-group";
   const body = await req.json().catch(() => null);
   const name = body?.name?.trim();
 
@@ -21,7 +25,7 @@ export async function POST(req: NextRequest) {
   }
 
   const participant = await prisma.participant.create({
-    data: { name, groupId: GROUP_ID },
+    data: { name, groupId},
   });
 
   return NextResponse.json(participant, { status: 201 });

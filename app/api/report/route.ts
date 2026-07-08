@@ -1,25 +1,27 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const GROUP_ID = "demo-group";
+
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req:NextRequest) {
+    const groupId =
+    req.nextUrl.searchParams.get("groupId") ?? "demo-group";
   const settlement = await prisma.settlement.findFirst({
-    where: { groupId: GROUP_ID },
+    where: { groupId },
     orderBy: { createdAt: "desc" },
   });
 
 console.log("Settlement found:", settlement);
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
-console.log("GROUP_ID:", GROUP_ID);
+console.log("GROUP_ID:", groupId);
 
   if (!settlement) {
     return NextResponse.json({ error: "No settlement has been run yet." }, { status: 404 });
   }
 
-  const participants = await prisma.participant.findMany({ where: { groupId: GROUP_ID } });
-  const debts = await prisma.debt.findMany({ where: { groupId: GROUP_ID } });
+  const participants = await prisma.participant.findMany({ where: { groupId} });
+  const debts = await prisma.debt.findMany({ where: { groupId} });
   const transactions = JSON.parse(settlement.result) as { from: string; to: string; amount: number }[];
 
   const nameOf = (id: string) => participants.find((p) => p.id === id)?.name ?? "Unknown";

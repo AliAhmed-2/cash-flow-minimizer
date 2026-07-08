@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const GROUP_ID = "demo-group";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const groupId =
+    req.nextUrl.searchParams.get("groupId") ?? "demo-group";
   const debts = await prisma.debt.findMany({
-    where: { groupId: GROUP_ID },
+    where: { groupId},
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json(debts);
 }
 
 export async function POST(req: NextRequest) {
+    const groupId =
+    req.nextUrl.searchParams.get("groupId") ?? "demo-group";
   const body = await req.json().catch(() => null);
   const fromId = body?.fromId;
   const toId = body?.toId;
@@ -25,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   const debt = await prisma.debt.create({
-    data: { fromId, toId, amount: Math.round(amount * 100) / 100, groupId: GROUP_ID },
+    data: { fromId, toId, amount: Math.round(amount * 100) / 100, groupId },
   });
 
   return NextResponse.json(debt, { status: 201 });

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import GraphView from "@/components/GraphView";
+import { getGroupId } from "@/lib/group";
+
 
 type Participant = { id: string; name: string };
 type Debt = { id: string; fromId: string; toId: string; amount: number };
@@ -15,6 +17,7 @@ const btnClass =
   "bg-goldbg border border-goldline text-gold text-sm font-semibold px-4 py-2 rounded-md whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed";
 const ghostBtnClass =
   "bg-transparent border border-line text-inkmuted text-sm font-semibold px-4 py-2 rounded-md";
+  const groupId = getGroupId();
 
 export default function Home() {
   const [step, setStep] = useState(1);
@@ -30,7 +33,7 @@ export default function Home() {
   const [error, setError] = useState("");
 
   const loadParticipants = () =>
-    fetch("/api/participants").then((r) => r.json()).then(setParticipants);
+    fetch(`/api/participants?groupId=${groupId}`).then((r) => r.json()).then(setParticipants);
   const loadDebts = () => fetch("/api/debts").then((r) => r.json()).then(setDebts);
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export default function Home() {
     const name = nameInput.trim();
     if (!name) return;
     setError("");
-    const res = await fetch("/api/participants", { method: "POST", body: JSON.stringify({ name }) });
+    const res = await fetch(`/api/participants?groupId=${groupId}`, { method: "POST", body: JSON.stringify({ name }) });
     if (!res.ok) return setError((await res.json()).error ?? "Could not add participant.");
     setNameInput("");
     loadParticipants();
@@ -60,20 +63,20 @@ export default function Home() {
       return setError("Pick two different people and a positive amount.");
     }
     setError("");
-    const res = await fetch("/api/debts", { method: "POST", body: JSON.stringify({ fromId, toId, amount: amt }) });
+    const res = await fetch(`/api/debts?groupId=${groupId}`, { method: "POST", body: JSON.stringify({ fromId, toId, amount: amt }) });
     if (!res.ok) return setError((await res.json()).error ?? "Could not add debt.");
     setAmount("");
     loadDebts();
   }
 
   async function removeDebt(id: string) {
-    await fetch("/api/debts", { method: "DELETE", body: JSON.stringify({ id }) });
+    await fetch(`/api/debts?groupId=${groupId}`, { method: "DELETE", body: JSON.stringify({ id }) });
     loadDebts();
   }
 
   async function runOptimizer() {
     setLoading(true);
-    const res = await fetch("/api/settle");
+    const res = await fetch(fetch(`/api/settle?groupId=${groupId}`));
     const data = await res.json();
     setTransactions(data.transactions);
     setLoading(false);
@@ -81,7 +84,7 @@ export default function Home() {
   }
 
   async function loadReport() {
-    const res = await fetch("/api/report");
+    const res = await fetch(`/api/report?groupId=${groupId}`);
     setReport(await res.text());
     setStep(4);
   }
