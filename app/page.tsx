@@ -17,9 +17,10 @@ const btnClass =
   "bg-goldbg border border-goldline text-gold text-sm font-semibold px-4 py-2 rounded-md whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed";
 const ghostBtnClass =
   "bg-transparent border border-line text-inkmuted text-sm font-semibold px-4 py-2 rounded-md";
-  const groupId = getGroupId();
+
 
 export default function Home() {
+  const [groupId, setGroupId] = useState("");
   const [step, setStep] = useState(1);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -34,12 +35,19 @@ export default function Home() {
 
   const loadParticipants = () =>
     fetch(`/api/participants?groupId=${groupId}`).then((r) => r.json()).then(setParticipants);
-  const loadDebts = () => fetch("/api/debts").then((r) => r.json()).then(setDebts);
+  const loadDebts = () => fetch(`/api/debts?groupId=${groupId}`).then((r) => r.json()).then(setDebts);
 
-  useEffect(() => {
-    loadParticipants();
-    loadDebts();
-  }, []);
+ useEffect(() => {
+  const id = getGroupId();
+  setGroupId(id);
+}, []);
+
+useEffect(() => {
+  if (!groupId) return;
+
+  loadParticipants();
+  loadDebts();
+}, [groupId]);
 
   async function addParticipant() {
     const name = nameInput.trim();
@@ -52,7 +60,7 @@ export default function Home() {
   }
 
   async function removeParticipant(id: string) {
-    await fetch("/api/participants", { method: "DELETE", body: JSON.stringify({ id }) });
+    await fetch(`/api/participants?groupId=${groupId}`, { method: "DELETE", body: JSON.stringify({ id }) });
     loadParticipants();
     loadDebts();
   }
